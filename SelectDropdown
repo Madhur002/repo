@@ -1,0 +1,236 @@
+// Custom dropdown component with search
+
+import { useRef, useState } from "react";
+
+// @mui material components
+import SearchIcon from "@mui/icons-material/Search";
+import Box from "@mui/material/Box";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Fade from "@mui/material/Fade";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputAdornment from "@mui/material/InputAdornment";
+import InputBase from "@mui/material/InputBase";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
+import Typography from "@mui/material/Typography";
+
+export const SelectDropdown = ({
+  label,
+  placeholder,
+  options,
+  value,
+  onChange,
+  error,
+  disabled = false,
+  backgroundColor = "transparent",
+  sx, // Add sx prop to accept external styles
+  hideSearch = false,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const anchorRef = useRef(null);
+
+  const filteredOptions = hideSearch
+    ? options
+    : options.filter((option) => option.label.toLowerCase().includes(searchText.toLowerCase()));
+
+  const handleToggle = () => {
+    if (disabled) return;
+    setOpen((prevOpen) => !prevOpen);
+  };
+
+  const handleClose = (event) => {
+    if (anchorRef.current && anchorRef.current.contains(event.target)) {
+      return;
+    }
+    setOpen(false);
+  };
+
+  const handleOptionSelect = (optionName) => {
+    onChange({ target: { label, value: optionName } });
+    setOpen(false);
+    setSearchText("");
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchText(event.target.value);
+  };
+
+  return (
+    <Box sx={{ width: "100%" }}>
+      <Box
+        ref={anchorRef}
+        onClick={handleToggle}
+        sx={{
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: error ? "#ff0000" : (theme) => theme.palette.custom.background1,
+          fontSize: "0.7rem",
+          height: "32px", // Fixed height to match InputField
+          p: 1.5,
+          cursor: disabled ? "not-allowed" : "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: disabled ? (theme) => theme.palette.custom.background1 : backgroundColor,
+          opacity: disabled ? 0.6 : 1,
+          ...sx, // Apply external styles
+        }}
+      >
+        <Typography
+          sx={{
+            color: (theme) => theme.palette.custom.text2,
+            fontSize: "0.7rem",
+            opacity: placeholder ? 0.5 : 1,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1,
+            mr: 1,
+            lineHeight: 1,
+          }}
+        >
+          {value || placeholder}
+        </Typography>
+        <Box
+          component="div"
+          sx={{
+            width: 0,
+            height: 0,
+            borderLeft: "5px solid transparent",
+            borderRight: "5px solid transparent",
+            borderTop: "5px solid #757575",
+            flexShrink: 0,
+          }}
+        />
+      </Box>
+      {error && (
+        <FormHelperText error sx={{ ml: 1.5, mt: 0.5, fontSize: "0.6rem" }}>
+          {error}
+        </FormHelperText>
+      )}
+      <Popper
+        open={open}
+        anchorEl={anchorRef.current}
+        placement="bottom-start"
+        transition
+        disablePortal
+        style={{
+          width: anchorRef.current ? anchorRef.current.clientWidth : undefined,
+          zIndex: 1200,
+        }}
+      >
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={200}>
+            <Paper
+              elevation={3}
+              sx={{
+                bgcolor: (theme) => theme.palette.custom.paper,
+                border: "none",
+                borderColor: (theme) => theme.palette.custom.background1,
+                mt: 0.5,
+                maxHeight: 150,
+                borderRadius: 3,
+                minWidth: 300,
+                padding: 2,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {!hideSearch && (
+                <Box
+                  sx={{
+                    p: 0.2,
+                    px: 2,
+                    mb: 1,
+                    border: "2px solid",
+                    borderColor: (theme) => theme.palette.custom.background1,
+                    backgroundColor: (theme) => theme.palette.custom.background1,
+                    borderRadius: 2,
+                  }}
+                >
+                  <InputBase
+                    autoFocus
+                    placeholder="Search options..."
+                    value={searchText}
+                    onChange={handleSearchChange}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <SearchIcon
+                          fontSize="small"
+                          sx={{
+                            color: (theme) => theme.palette.custom.text2,
+                            fontSize: "1rem !important",
+                          }}
+                        />
+                      </InputAdornment>
+                    }
+                    fullWidth
+                    sx={{ fontSize: "0.7rem", color: (theme) => theme.palette.custom.text2, p: 0, height: "30px !important" }}
+                  />
+                </Box>
+              )}
+              <Box
+                sx={{
+                  overflow: "auto",
+                  maxHeight: 250,
+                  "&::-webkit-scrollbar": { display: "none" },
+                  msOverflowStyle: "none",
+                  scrollbarWidth: "none",
+                }}
+              >
+                <ClickAwayListener onClickAway={handleClose}>
+                  <Box>
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option) => (
+                        <Box
+                          key={option.value}
+                          onClick={() => handleOptionSelect(option.label)}
+                          sx={{
+                            px: 1.5,
+                            py: 0.5,
+                            gap: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                            cursor: "pointer",
+                            mb: 1,
+                            borderRadius: 1,
+                            "&:hover": {
+                              backgroundColor: (theme) => theme.palette.custom.background1,
+                              color: "#000000",
+                            },
+                            ...(value === option.label && {
+                              backgroundColor: (theme) => theme.palette.custom.background1,
+                            }),
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.7rem",
+                              color: (theme) => theme.palette.custom.text2,
+                            }}
+                          >
+                            {option.label}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Box sx={{ p: 1.5, textAlign: "center" }}>
+                        <Typography
+                          sx={{ fontSize: "0.7rem", color: (theme) => theme.palette.custom.text2 }}
+                        >
+                          No results found
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </ClickAwayListener>
+              </Box>
+            </Paper>
+          </Fade>
+        )}
+      </Popper>
+    </Box>
+  );
+};
